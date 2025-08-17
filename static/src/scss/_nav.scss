@@ -10,7 +10,6 @@ header {
 div.topbar-container {
   display: flex;
   @include make-container();
-  @include make-container-max-widths();
   form {
     margin-top: 0px !important;
   }

@@ -211,3 +211,5 @@ dev.db
 site_media/
 static/dist/
 .DS_Store
+bin
+lib

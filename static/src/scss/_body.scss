@@ -12,14 +12,12 @@ main {
 }
 #content-body {
   @include make-container();
-  @include make-container-max-widths();
 }
 footer {
   padding: 20px 0;
   background-color: $footer-bg-color;
   > div {
     @include make-container();
-    @include make-container-max-widths();
     display: flex;
     justify-content: space-between;
     .made-with-pinax {
