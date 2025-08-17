@@ -135,7 +135,7 @@ INSTALLED_APPS = [
     # external
     "account",
     "pinax.eventlog",
-    "pinax.webanalytics",
+    "arenasurf.apps.WebanalyticsConfig",
 
     # project
     "arenasurf",
@@ -190,3 +190,5 @@ ACCOUNT_USE_AUTH_AUTHENTICATE = True
 AUTHENTICATION_BACKENDS = [
     "account.auth_backends.UsernameAuthenticationBackend",
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
