@@ -1,8 +1,9 @@
 {% extends "site_base.html" %}
 
 {% load i18n %}
+{% load static %}
 
-{% block head_title %}pinax-project-account{% endblock %}
+{% block head_title %}La Arena Surf Center{% endblock %}
 
 {% block body_class %}home{% endblock %}
 
@@ -11,74 +12,100 @@
     <section class="jumbotron">
         <div class="container">
             {% include "_messages.html" %}
-            <h1>{% blocktrans %}Welcome to<div style="font-size: 6rem; font-weight: 600;">Project Account</div>{% endblocktrans %}</h1>
+            <h1>{% blocktrans %}Bienvenido a<div style="font-size: 6rem; font-weight: 600;">La Arena Surf Center</div>{% endblocktrans %}</h1>
             <p class="lead">
                 {% blocktrans %}
-                In addition to what is provided by Project Zero, this project
-                provides thorough integration with django-user-accounts, adding
-                comprehensive account management functionality. It is a foundation
-                suitable for most sites that have user accounts.
+                Más de 400m² dedicados al surf en una zona privilegiada, a solo 100m de la 
+                playa de La Arena en Zierbena, Bizkaia. Aprende y desarrolla la práctica 
+                del surf en las mejores condiciones con nuestros instructores profesionales.
                 {% endblocktrans %}
             </p>
             {% if not user.is_authenticated %}
             {% url "account_login" as login_url %}
             {% url "account_signup" as signup_url %}
-            <p class="mb-5 lead">{% blocktrans %}You can <a href="{{ login_url }}" class="btn btn-secondary">Log In</a> or <a href="{{ signup_url }}" class="btn btn-primary">Sign Up</a> to try out the site.{% endblocktrans %}</p>
+            <p class="mb-5 lead">{% blocktrans %}Puedes <a href="{{ login_url }}" class="btn btn-secondary">Iniciar Sesión</a> o <a href="{{ signup_url }}" class="btn btn-primary">Registrarte</a> para acceder a todos nuestros servicios.{% endblocktrans %}</p>
             {% endif %}
-            <img src="http://pinaxproject.com/pinax-design/tessellations/Project%20Account.png" />
         </div>
     </section>
     <section id="content-section">
         <div id="content-body">
-            <h2 class="text-center">{% blocktrans %}What is Pinax?{% endblocktrans %}</h2>
-            <p class="lead">
+            <h2 class="text-center">{% blocktrans %}¿Por qué elegir La Arena Surf Center?{% endblocktrans %}</h2>
+            <p class="lead text-center">
                 {% blocktrans %}
-                <b>Pinax</b> is an open-source platform based on Django and
-                intended to provide a starting point for websites. It takes
-                care of the things that many sites have in common, so you can
-                focus on what makes your site different.
+                <b>La Arena Surf Center</b> es tu centro de referencia para el surf en el País Vasco.
+                Ubicados estratégicamente junto a la playa de La Arena, ofrecemos una experiencia 
+                completa para surfistas de todos los niveles.
                 {% endblocktrans %}
             </p>
 
             <div class="feature-columns row">
                 <div class="col">
-                    <div class="icon"><i class="fa fa-cubes fa-3x"></i></div>
+                    <div class="icon"><i class="fas fa-water fa-3x text-primary"></i></div>
                     <div class="desc">
+                        <h4>{% blocktrans %}Escuela de Surf{% endblocktrans %}</h4>
                         {% blocktrans %}
-                        <b>Starter projects</b> provide project layout,
-                        scaffolding, already integrated components and
-                        ready-to-go code.
+                        <b>Cursos para todos los niveles</b> desde principiantes hasta 
+                        avanzados. Cursos familiares, campamentos de verano y programas 
+                        especiales para centros educativos.
                         {% endblocktrans %}
                     </div>
                 </div>
                 <div class="col">
-                    <div class="icon"><i class="fa fa-puzzle-piece fa-3x"></i></div>
+                    <div class="icon"><i class="fas fa-warehouse fa-3x text-success"></i></div>
                     <div class="desc">
+                        <h4>{% blocktrans %}Instalaciones{% endblocktrans %}</h4>
                         {% blocktrans %}
-                        <b>Reusable apps</b> provide common
-                        infrastructure, back-end functionality,
-                        and user-facing components.
+                        <b>Más de 400m² de instalaciones</b> modernas y completamente 
+                        equipadas para el surf, con vestuarios, duchas y zona de 
+                        almacenamiento de material.
                         {% endblocktrans %}
                     </div>
                 </div>
                 <div class="col">
-                    <div class="icon"><i class="fa fa-tint fa-3x"></i></div>
+                    <div class="icon"><i class="fas fa-users fa-3x text-info"></i></div>
                     <div class="desc">
+                        <h4>{% blocktrans %}Club de Socios{% endblocktrans %}</h4>
                         {% blocktrans %}
-                        <b>Themes</b> provide default templates and
-                        stylesheets for quick prototyping and easy customization.
+                        <b>Únete a nuestra comunidad</b> de surfistas. Disfruta de 
+                        descuentos especiales, eventos exclusivos y alquiler de 
+                        material con condiciones preferenciales.
                         {% endblocktrans %}
                     </div>
                 </div>
             </div>
+
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h3>{% blocktrans %}Nuestra Ubicación{% endblocktrans %}</h3>
+                    <p>
+                        {% blocktrans %}
+                        Situados en La Arena 21, Bajo 6, 48508 Zierbena, Bizkaia, 
+                        estamos a solo 100 metros de una de las mejores playas para 
+                        practicar surf en el País Vasco.
+                        {% endblocktrans %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h3>{% blocktrans %}Servicios{% endblocktrans %}</h3>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Cursos de surf</li>
+                        <li><i class="fas fa-check text-success"></i> Alquiler de material</li>
+                        <li><i class="fas fa-check text-success"></i> Campamentos de verano</li>
+                        <li><i class="fas fa-check text-success"></i> Programas para centros educativos</li>
+                        <li><i class="fas fa-check text-success"></i> Club de socios</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </section>
-    <section>
+    <section class="bg-light py-5">
         <div class="container">
             <p class="see-more lead text-center">
                 {% blocktrans %}
-                See <a href="http://pinaxproject.com/">pinaxproject.com</a>
-                for more information.
+                Para más información visita 
+                <a href="https://www.laarenasurfcenter.com/" target="_blank">laarenasurfcenter.com</a>
+                o contáctanos en 
+                <a href="mailto:centroyescueladesurflaarena@gmail.com">centroyescueladesurflaarena@gmail.com</a>
                 {% endblocktrans %}
             </p>
         </div>
