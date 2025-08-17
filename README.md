@@ -21,7 +21,6 @@
 
 Art by Shanaka Dias
 
-
 ## Getting Started
 
 Make sure you are using a virtual environment of some sort (e.g. `virtualenv` or
@@ -35,4 +34,4 @@ pip install -r requirements.txt
 npm run dev
 ```
 
-Browse to http://localhost:3000/
+Browse to <http://localhost:3000/>

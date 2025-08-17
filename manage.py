@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Lanzador de la app DJANGO."""
 import os
 import sys
 

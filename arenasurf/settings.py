@@ -1,3 +1,4 @@
+"""Conf de la aplicación"""
 import os
 
 
