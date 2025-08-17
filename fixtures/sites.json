@@ -4,15 +4,23 @@
         "model": "sites.site",
         "fields": {
             "domain": "localhost:8000",
-            "name": "example.com [localhost]"
+            "name": "La Arena Surf Center"
         }
     },
     {
         "pk": 2,
         "model": "sites.site",
         "fields": {
-            "domain": "example.com",
-            "name": "example.com"
+            "domain": "app.laarenasurfcenter.com",
+            "name": "La Arena Surf Center"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "sites.site",
+        "fields": {
+            "domain": "laarenasurfcenter.etxea.net",
+            "name": "La Arena Surf Center"
         }
     }
 ]

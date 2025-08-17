@@ -29,7 +29,7 @@ def settings(request):
         "pinax_apps": package_names(filter(pinax_apps_filter, django_settings.INSTALLED_APPS))
     }
 
-    if Site._meta.installed:
+    if "django.contrib.sites" in django_settings.INSTALLED_APPS:
         site = Site.objects.get_current(request)
         ctx.update({
             "SITE_NAME": site.name,
