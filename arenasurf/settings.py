@@ -124,22 +124,19 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
-    "django.contrib.messages",
     "django.contrib.sessions",
     "django.contrib.sites",
+    "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # templates
     "bootstrapform",
     "pinax.templates",
-
-    # external
-    "account",
     "pinax.eventlog",
-    "arenasurf.apps.WebanalyticsConfig",
-
-    # project
+    "account",
+    # "arenasurf.webanalytics_config",
     "arenasurf",
+    "clientes",
+    "bonos",
+    "socios",
 ]
 
 ADMIN_URL = "admin:index"

@@ -1,0 +1,156 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Lista de Bonos{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Lista de Bonos</h1>
+                <a href="{% url 'bonos:crear' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Bono
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if bonos %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Tipo</th>
+                                        <th>Usos</th>
+                                        <th>Estado</th>
+                                        <th>Precio</th>
+                                        <th>Fecha Compra</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bono in bonos %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'bonos:cliente_detalle' bono.cliente.pk %}">
+                                                {{ bono.cliente.nombre_completo }}
+                                            </a>
+                                        </td>
+                                        <td>{{ bono.get_tipo_bono_display }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ bono.porcentaje_uso }}%;" 
+                                                     aria-valuenow="{{ bono.porcentaje_uso }}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                    {{ bono.usos_utilizados }}/{{ bono.usos_totales }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if bono.activo %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Agotado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if bono.precio %}
+                                                {{ bono.precio }}€
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ bono.fecha_compra|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'bonos:detalle' bono.pk %}" 
+                                                   class="btn btn-outline-info" title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if bono.activo and bono.usos_restantes > 0 %}
+                                                    <form method="post" action="{% url 'bonos:usar' bono.pk %}" 
+                                                          style="display:inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-outline-warning" 
+                                                                title="Usar bono"
+                                                                onclick="return confirm('¿Confirmar uso del bono?');">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <a href="{% url 'bonos:editar' bono.pk %}" 
+                                                   class="btn btn-outline-primary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'bonos:eliminar' bono.pk %}" 
+                                                   class="btn btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <div class="row mt-3">
+            <div class="col-12">
+                <nav aria-label="Paginación de bonos">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in paginator.page_range %}
+                            {% if page_obj.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h4>No hay bonos registrados</h4>
+                    <p>Comienza creando tu primer bono.</p>
+                    <a href="{% url 'bonos:crear' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Bono
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

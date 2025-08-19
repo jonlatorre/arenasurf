@@ -1,3 +1,2 @@
 django-user-accounts==3.3.2
 pinax-eventlog==6.0.0
-pinax-webanalytics==5.0.0

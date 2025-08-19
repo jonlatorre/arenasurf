@@ -1,0 +1,188 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Detalle del Cliente{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user"></i> {{ cliente.nombre_completo }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Información Personal</h5>
+                            <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+                            <p><strong>Apellidos:</strong> {{ cliente.apellidos }}</p>
+                            <p><strong>Email:</strong> {{ cliente.email }}</p>
+                            <p><strong>Teléfono:</strong> {{ cliente.telefono|default:"-" }}</p>
+                            <p><strong>Fecha de Nacimiento:</strong> 
+                                {% if cliente.fecha_nacimiento %}
+                                    {{ cliente.fecha_nacimiento|date:"d/m/Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Información de Registro</h5>
+                            <p><strong>Fecha de Registro:</strong> {{ cliente.created_at|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Última Actualización:</strong> {{ cliente.updated_at|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Estado:</strong> 
+                                {% if cliente.activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Acciones -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'bonos:crear' %}?cliente={{ cliente.pk }}" 
+                       class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-plus"></i> Crear Bono
+                    </a>
+                    
+                    <a href="{% url 'clientes:editar' cliente.pk %}" 
+                       class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Editar Cliente
+                    </a>
+                    
+                    {% if cliente.activo %}
+                        <a href="{% url 'clientes:eliminar' cliente.pk %}" 
+                           class="btn btn-danger w-100 mb-2">
+                            <i class="fas fa-user-times"></i> Desactivar
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'clientes:lista' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-arrow-left"></i> Volver a la Lista
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-2">
+                        <h3 class="text-primary">{{ cliente.bonos_activos_count }}</h3>
+                        <small class="text-muted">Bonos Activos</small>
+                    </div>
+                    <div class="text-center mb-2">
+                        <h3 class="text-secondary">{{ cliente.bonos_agotados_count }}</h3>
+                        <small class="text-muted">Bonos Agotados</small>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-info">{{ bonos.count }}</h3>
+                        <small class="text-muted">Total Bonos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de bonos -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-ticket-alt"></i> Bonos del Cliente</h5>
+                </div>
+                <div class="card-body">
+                    {% if bonos %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Usos</th>
+                                        <th>Estado</th>
+                                        <th>Precio</th>
+                                        <th>Fecha Compra</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bono in bonos %}
+                                    <tr>
+                                        <td>{{ bono.get_tipo_bono_display }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ bono.porcentaje_uso }}%;" 
+                                                     aria-valuenow="{{ bono.porcentaje_uso }}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                    {{ bono.usos_utilizados }}/{{ bono.usos_totales }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if bono.activo %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Agotado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if bono.precio %}
+                                                {{ bono.precio }}€
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ bono.fecha_compra|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'bonos:detalle' bono.pk %}" 
+                                                   class="btn btn-outline-info" title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if bono.activo and bono.usos_restantes > 0 %}
+                                                    <form method="post" action="{% url 'bonos:usar' bono.pk %}" 
+                                                          style="display:inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-outline-warning" 
+                                                                title="Usar bono"
+                                                                onclick="return confirm('¿Confirmar uso del bono?');">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Este cliente no tiene bonos registrados.</p>
+                        <div class="text-center">
+                            <a href="{% url 'bonos:crear' %}?cliente={{ cliente.pk }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Crear Primer Bono
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Detalle del Bono{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-ticket-alt"></i> Detalle del Bono</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Información del Cliente</h5>
+                            <p><strong>Nombre:</strong> 
+                                <a href="{% url 'bonos:cliente_detalle' bono.cliente.pk %}">
+                                    {{ bono.cliente.nombre_completo }}
+                                </a>
+                            </p>
+                            <p><strong>Email:</strong> {{ bono.cliente.email }}</p>
+                            <p><strong>Teléfono:</strong> {{ bono.cliente.telefono }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Información del Bono</h5>
+                            <p><strong>Tipo:</strong> {{ bono.get_tipo_bono_display }}</p>
+                            <p><strong>Precio:</strong> 
+                                {% if bono.precio %}{{ bono.precio }}€{% else %}-{% endif %}
+                            </p>
+                            <p><strong>Fecha de Compra:</strong> {{ bono.fecha_compra|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Fecha de Expiración:</strong> 
+                                {% if bono.fecha_expiracion %}
+                                    {{ bono.fecha_expiracion|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    Sin expiración
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Estado del Bono</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h2 class="text-primary">{{ bono.usos_restantes }}</h2>
+                                        <p class="text-muted">Usos Restantes</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h2 class="text-info">{{ bono.usos_utilizados }}</h2>
+                                        <p class="text-muted">Usos Realizados</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h2 class="text-secondary">{{ bono.usos_totales }}</h2>
+                                        <p class="text-muted">Total de Usos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mb-3" style="height: 30px;">
+                                <div class="progress-bar progress-bar-striped" role="progressbar" 
+                                     style="width: {{ bono.porcentaje_uso }}%;" 
+                                     aria-valuenow="{{ bono.porcentaje_uso }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ bono.porcentaje_uso|floatformat:1 }}%
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                {% if bono.activo %}
+                                    <span class="badge bg-success fs-6">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">Agotado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Acciones -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Acciones</h5>
+                </div>
+                <div class="card-body">
+                    {% if bono.activo and bono.usos_restantes > 0 %}
+                        <a href="{% url 'bonos:agregar_uso' bono.pk %}" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-plus"></i> Registrar Uso Detallado
+                        </a>
+                        
+                        <form method="post" action="{% url 'bonos:usar' bono.pk %}" class="mb-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning w-100"
+                                    onclick="return confirm('¿Confirmar uso rápido del bono?');">
+                                <i class="fas fa-minus"></i> Uso Rápido
+                            </button>
+                        </form>
+                    {% endif %}
+                    
+                    <a href="{% url 'bonos:editar' bono.pk %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    
+                    <a href="{% url 'bonos:eliminar' bono.pk %}" class="btn btn-danger w-100 mb-2">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                    
+                    <a href="{% url 'bonos:lista' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-arrow-left"></i> Volver a la Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historial de usos -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Historial de Usos</h5>
+                </div>
+                <div class="card-body">
+                    {% if usos %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for uso in usos %}
+                                    <tr>
+                                        <td>{{ uso.fecha_uso|date:"d/m/Y" }}</td>
+                                        <td>{{ uso.descripcion|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Este bono no se ha usado aún.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

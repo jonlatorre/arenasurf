@@ -1,0 +1,124 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}
+    {% if object %}Editar Bono{% else %}Nuevo Bono{% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        {% if object %}
+                            <i class="fas fa-edit"></i> Editar Bono
+                        {% else %}
+                            <i class="fas fa-plus"></i> Nuevo Bono
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                        {{ form.cliente.label }}
+                                    </label>
+                                    {{ form.cliente }}
+                                    {% if form.cliente.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.cliente.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo_bono.id_for_label }}" class="form-label">
+                                        {{ form.tipo_bono.label }}
+                                    </label>
+                                    {{ form.tipo_bono }}
+                                    {% if form.tipo_bono.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.tipo_bono.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.precio.id_for_label }}" class="form-label">
+                                        {{ form.precio.label }}
+                                    </label>
+                                    {{ form.precio }}
+                                    {% if form.precio.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.precio.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.fecha_expiracion.id_for_label }}" class="form-label">
+                                        {{ form.fecha_expiracion.label }}
+                                    </label>
+                                    {{ form.fecha_expiracion }}
+                                    {% if form.fecha_expiracion.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.fecha_expiracion.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Opcional. Deja vacío si no tiene fecha de expiración.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'bonos:lista' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if object %}Actualizar{% else %}Crear{% endif %} Bono
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Si no hay clientes, mostrar alerta
+    const clienteSelect = document.getElementById('id_cliente');
+    if (clienteSelect && clienteSelect.options.length <= 1) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-warning mt-3';
+        alert.innerHTML = `
+            <strong>¡Atención!</strong> No hay clientes registrados. 
+            <a href="{% url 'bonos:cliente_crear' %}" class="alert-link">Crear cliente</a> primero.
+        `;
+        clienteSelect.parentNode.appendChild(alert);
+    }
+});
+</script>
+{% endblock %}
