@@ -1,0 +1,62 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Desactivar Socio{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3><i class="fas fa-user-times"></i> Desactivar Socio</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>¡Atención!</strong> Esta acción desactivará al socio pero no eliminará sus datos.
+                    </div>
+                    
+                    <p>¿Estás seguro de que quieres desactivar el siguiente socio?</p>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5>Socio {{ object.numero_socio }}</h5>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Cliente:</strong> {{ object.cliente.nombre_completo }}</li>
+                                <li><strong>Nivel:</strong> {{ object.get_nivel_display }}</li>
+                                <li><strong>Estado:</strong> 
+                                    {% if object.esta_vigente %}
+                                        <span class="badge badge-success">Vigente</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Vencido</span>
+                                    {% endif %}
+                                </li>
+                                <li><strong>Vencimiento:</strong> {{ object.fecha_vencimiento|date:"d/m/Y" }}</li>
+                                {% if object.numero_taquilla %}
+                                <li><strong>Taquilla:</strong> {{ object.numero_taquilla }}</li>
+                                {% endif %}
+                                {% if object.numero_guardatablas %}
+                                <li><strong>Guardatablas:</strong> {{ object.numero_guardatablas }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="mt-3">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'socios:detalle' object.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-user-times"></i> Sí, Desactivar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

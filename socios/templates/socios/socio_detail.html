@@ -1,0 +1,217 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Socio {{ socio.numero_socio }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>
+                            <i class="fas fa-user-tie"></i> Socio {{ socio.numero_socio }}
+                        </h3>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'socios:editar' socio.pk %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            {% if not socio.esta_vigente and socio.activo %}
+                            <a href="{% url 'socios:renovar' socio.pk %}" class="btn btn-success">
+                                <i class="fas fa-sync-alt"></i> Renovar
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'socios:eliminar' socio.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Desactivar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Estado del socio -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            {% if socio.esta_vigente %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Membresía Vigente</strong> - Vence el {{ socio.fecha_vencimiento|date:"d/m/Y" }}
+                                    ({{ socio.dias_hasta_vencimiento }} días restantes)
+                                </div>
+                            {% elif not socio.activo %}
+                                <div class="alert alert-dark">
+                                    <i class="fas fa-ban"></i>
+                                    <strong>Socio Inactivo</strong>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Membresía Vencida</strong> - Venció el {{ socio.fecha_vencimiento|date:"d/m/Y" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Información del cliente -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Información del Cliente</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Nombre Completo:</strong></td>
+                                    <td>
+                                        <a href="{% url 'clientes:detalle' socio.cliente.pk %}">
+                                            {{ socio.cliente.nombre_completo }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ socio.cliente.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Teléfono:</strong></td>
+                                    <td>{{ socio.cliente.telefono|default:"-" }}</td>
+                                </tr>
+                                {% if socio.cliente.fecha_nacimiento %}
+                                <tr>
+                                    <td><strong>Fecha de Nacimiento:</strong></td>
+                                    <td>{{ socio.cliente.fecha_nacimiento|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Información de Membresía</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Número de Socio:</strong></td>
+                                    <td>{{ socio.numero_socio }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nivel:</strong></td>
+                                    <td>
+                                        <span class="badge badge-{% if socio.nivel == 'VIP' %}danger{% elif socio.nivel == 'PREMIUM' %}warning{% else %}secondary{% endif %} badge-lg">
+                                            {{ socio.get_nivel_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Precio Anual:</strong></td>
+                                    <td>{{ socio.precio_anual }}€</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha de Alta:</strong></td>
+                                    <td>{{ socio.fecha_alta|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha de Vencimiento:</strong></td>
+                                    <td>{{ socio.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Servicios incluidos -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Servicios Incluidos</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-key fa-2x mb-2 text-primary"></i>
+                                            <h6>Taquilla</h6>
+                                            {% if socio.numero_taquilla %}
+                                                <span class="badge badge-primary badge-lg">Nº {{ socio.numero_taquilla }}</span>
+                                            {% else %}
+                                                <span class="text-muted">No asignada</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-clipboard fa-2x mb-2 text-info"></i>
+                                            <h6>Guardatablas</h6>
+                                            {% if socio.numero_guardatablas %}
+                                                <span class="badge badge-info badge-lg">Nº {{ socio.numero_guardatablas }}</span>
+                                            {% elif socio.nivel == 'BASICO' %}
+                                                <span class="text-muted">No incluido en nivel básico</span>
+                                            {% else %}
+                                                <span class="text-muted">No asignado</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel lateral con información adicional -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Información Adicional</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Historial de Bonos</h6>
+                    {% if socio.cliente.bonos.all %}
+                        <div class="list-group list-group-flush">
+                            {% for bono in socio.cliente.bonos.all|slice:":5" %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <a href="{% url 'bonos:detalle' bono.pk %}" class="font-weight-bold">
+                                            Bono {{ bono.tipo_bono }} usos
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">{{ bono.fecha_compra|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <span class="badge badge-{% if bono.activo %}success{% else %}secondary{% endif %}">
+                                        {% if bono.activo %}{{ bono.usos_restantes }} usos{% else %}Agotado{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if socio.cliente.bonos.count > 5 %}
+                        <a href="{% url 'clientes:detalle' socio.cliente.pk %}" class="btn btn-sm btn-outline-info mt-2">
+                            Ver todos los bonos ({{ socio.cliente.bonos.count }})
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No tiene bonos registrados.</p>
+                        <a href="{% url 'bonos:crear' %}?cliente={{ socio.cliente.pk }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Crear Bono
+                        </a>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <h6>Estadísticas</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Bonos activos:</strong> {{ socio.cliente.bonos_activos_count }}</li>
+                        <li><strong>Bonos agotados:</strong> {{ socio.cliente.bonos_agotados_count }}</li>
+                        <li><strong>Cliente desde:</strong> {{ socio.cliente.created_at|date:"d/m/Y" }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <a href="{% url 'socios:lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a la Lista
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

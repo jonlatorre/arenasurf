@@ -1,0 +1,203 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Gestión de Socios{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Gestión de Socios</h1>
+                <a href="{% url 'socios:crear' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Socio
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="form-inline">
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ search }}" 
+                                   placeholder="Buscar por número, nombre, apellidos o email...">
+                        </div>
+                        <div class="form-group mr-3">
+                            <select name="nivel" class="form-control">
+                                <option value="">Todos los niveles</option>
+                                {% for value, label in nivel_choices %}
+                                <option value="{{ value }}" {% if nivel == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <select name="estado" class="form-control">
+                                <option value="">Todos los estados</option>
+                                <option value="vigente" {% if estado == 'vigente' %}selected{% endif %}>Vigentes</option>
+                                <option value="vencido" {% if estado == 'vencido' %}selected{% endif %}>Vencidos</option>
+                                <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivos</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-info mr-2">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <a href="{% url 'socios:lista' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Limpiar
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de socios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Socios ({{ socios|length }} de {{ paginator.count }} total)</h5>
+                </div>
+                <div class="card-body">
+                    {% if socios %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Socio</th>
+                                        <th>Cliente</th>
+                                        <th>Nivel</th>
+                                        <th>Estado</th>
+                                        <th>Vencimiento</th>
+                                        <th>Taquilla</th>
+                                        <th>Guardatablas</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for socio in socios %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'socios:detalle' socio.pk %}" class="font-weight-bold">
+                                                {{ socio.numero_socio }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'clientes:detalle' socio.cliente.pk %}">
+                                                {{ socio.cliente.nombre_completo }}
+                                            </a>
+                                            <br>
+                                            <small class="text-muted">{{ socio.cliente.email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-{% if socio.nivel == 'VIP' %}danger{% elif socio.nivel == 'PREMIUM' %}warning{% else %}secondary{% endif %}">
+                                                {{ socio.get_nivel_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if socio.esta_vigente %}
+                                                <span class="badge badge-success">Vigente</span>
+                                            {% elif not socio.activo %}
+                                                <span class="badge badge-dark">Inactivo</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Vencido</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ socio.fecha_vencimiento|date:"d/m/Y" }}
+                                            {% if socio.esta_vigente and socio.dias_hasta_vencimiento <= 30 %}
+                                                <br>
+                                                <small class="{% if socio.dias_hasta_vencimiento <= 7 %}text-danger{% elif socio.dias_hasta_vencimiento <= 15 %}text-warning{% else %}text-info{% endif %}">
+                                                    {{ socio.dias_hasta_vencimiento }} días restantes
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if socio.numero_taquilla %}
+                                                <span class="badge badge-info">{{ socio.numero_taquilla }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if socio.numero_guardatablas %}
+                                                <span class="badge badge-info">{{ socio.numero_guardatablas }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'socios:detalle' socio.pk %}" 
+                                                   class="btn btn-outline-info" title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'socios:editar' socio.pk %}" 
+                                                   class="btn btn-outline-warning" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if not socio.esta_vigente and socio.activo %}
+                                                <a href="{% url 'socios:renovar' socio.pk %}" 
+                                                   class="btn btn-outline-success" title="Renovar">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Paginación -->
+                        {% if is_paginated %}
+                        <nav aria-label="Paginación de socios">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if nivel %}&nivel={{ nivel }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}">Primera</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if nivel %}&nivel={{ nivel }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}">Anterior</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if nivel %}&nivel={{ nivel }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}">Siguiente</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if nivel %}&nivel={{ nivel }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}">Última</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No se encontraron socios que coincidan con los criterios de búsqueda.</p>
+                            <a href="{% url 'socios:crear' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Crear Primer Socio
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

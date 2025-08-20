@@ -1,0 +1,168 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block head_title %}Dashboard - Gestión de Socios{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Dashboard - Gestión de Socios</h1>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Total Socios</h5>
+                            <h2>{{ total_socios }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Vigentes</h5>
+                            <h2>{{ socios_vigentes }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Vencidos</h5>
+                            <h2>{{ socios_vencidos }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Por Nivel</h5>
+                            <small>B:{{ socios_basico }} P:{{ socios_premium }} V:{{ socios_vip }}</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Acciones rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'socios:crear' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Socio
+                        </a>
+                        <a href="{% url 'socios:lista' %}" class="btn btn-info">
+                            <i class="fas fa-list"></i> Ver Socios
+                        </a>
+                        <a href="{% url 'clientes:crear' %}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Nuevo Cliente
+                        </a>
+                        <a href="{% url 'bonos:crear' %}" class="btn btn-warning">
+                            <i class="fas fa-ticket-alt"></i> Nuevo Bono
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Próximos vencimientos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Próximos Vencimientos (30 días)</h5>
+                </div>
+                <div class="card-body">
+                    {% if proximos_vencimientos %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Socio</th>
+                                        <th>Cliente</th>
+                                        <th>Nivel</th>
+                                        <th>Vence</th>
+                                        <th>Días Restantes</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for socio in proximos_vencimientos %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'socios:detalle' socio.pk %}">
+                                                {{ socio.numero_socio }}
+                                            </a>
+                                        </td>
+                                        <td>{{ socio.cliente.nombre_completo }}</td>
+                                        <td>
+                                            <span class="badge badge-{% if socio.nivel == 'VIP' %}danger{% elif socio.nivel == 'PREMIUM' %}warning{% else %}secondary{% endif %}">
+                                                {{ socio.get_nivel_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ socio.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% if socio.dias_hasta_vencimiento <= 7 %}
+                                                <span class="text-danger font-weight-bold">{{ socio.dias_hasta_vencimiento }} días</span>
+                                            {% elif socio.dias_hasta_vencimiento <= 15 %}
+                                                <span class="text-warning font-weight-bold">{{ socio.dias_hasta_vencimiento }} días</span>
+                                            {% else %}
+                                                <span class="text-info">{{ socio.dias_hasta_vencimiento }} días</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'socios:renovar' socio.pk %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-sync-alt"></i> Renovar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay socios próximos a vencer en los próximos 30 días.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
