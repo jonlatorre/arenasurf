@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Establecer variables de entorno
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=arenasurf.settings
+ENV DJANGO_SETTINGS_MODULE=arenasurf.docker_settings
 
 # Crear directorio de trabajo
 WORKDIR /app

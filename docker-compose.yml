@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   web:
@@ -8,8 +7,10 @@ services:
     volumes:
       - ./media:/app/media
       - ./logs:/app/logs
+      - ./static:/app/static_source
+      - static_volume:/app/static
     environment:
-      - DEBUG=0
+      - DEBUG=False
       - USE_MYSQL=1
       - DJANGO_SETTINGS_MODULE=arenasurf.docker_settings
       - MYSQL_DATABASE=arenasurf
@@ -44,7 +45,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./static:/app/static
+      - static_volume:/app/static
       - ./media:/app/media
     depends_on:
       - web
@@ -53,6 +54,7 @@ services:
 
 volumes:
   mysql_data:
+  static_volume:
 
 networks:
   arenasurf-network:

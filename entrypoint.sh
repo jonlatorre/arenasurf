@@ -20,6 +20,14 @@ apply_migrations() {
 collect_static() {
     echo "Recopilando archivos estáticos..."
     python manage.py collectstatic --noinput --clear
+    
+    # Copiar archivos CSS específicos si existen
+    if [ -f "static/dist/css/app.css" ]; then
+        echo "Copiando archivo CSS personalizado..."
+        mkdir -p /app/static/css
+        cp static/dist/css/app.css /app/static/css/app.css
+        echo "Archivo CSS copiado exitosamente"
+    fi
 }
 
 # Función para crear superusuario si no existe

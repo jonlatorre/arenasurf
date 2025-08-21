@@ -1,6 +1,10 @@
 """Configuración Docker con MySQL"""
 import os
+from pathlib import Path
 from django.conf import settings as django_settings
+
+# Define BASE_DIR
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Importar configuración base
 try:
@@ -51,6 +55,22 @@ if not DEBUG:
 
 # Hosts permitidos
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Configuración de archivos estáticos para Docker
+STATIC_ROOT = '/app/static/'
+STATIC_URL = '/static/'
+
+# Archivos estáticos - usar el storage simple en lugar de ManifestStaticFilesStorage
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Directorios de archivos estáticos
+STATICFILES_DIRS = [
+    '/app/static_source/dist',
+]
+
+# Media files
+MEDIA_ROOT = '/app/media/'
+MEDIA_URL = '/media/'
 
 # Configuración de logging
 LOGGING = {
