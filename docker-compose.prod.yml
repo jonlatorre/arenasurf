@@ -1,0 +1,119 @@
+# Docker Compose para Producción
+# Este archivo debe copiarse a los servidores de staging y producción
+
+version: '3.8'
+
+services:
+  web:
+    image: ${REGISTRY_IMAGE:-registry.gitlab.com/tu-usuario/arenasurf:latest}
+    restart: always
+    environment:
+      - DATABASE_URL=mysql://arenasurf:${MYSQL_PASSWORD}@db:3306/arenasurf
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-True}
+      - SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,https
+      - USE_X_FORWARDED_HOST=True
+      - USE_X_FORWARDED_PORT=True
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - db
+    networks:
+      - arenasurf_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/login/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: arenasurf
+      MYSQL_USER: arenasurf
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backup:/backup
+      - ./mysql/conf.d:/etc/mysql/conf.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - arenasurf_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/app/static:ro
+      - media_volume:/app/media:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - web
+    networks:
+      - arenasurf_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio para backups automáticos
+  backup:
+    image: mysql:8.0
+    restart: "no"
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./backup:/backup
+      - ./scripts/backup.sh:/backup.sh:ro
+    depends_on:
+      - db
+    networks:
+      - arenasurf_network
+    profiles:
+      - backup
+
+  # Servicio para monitoreo (opcional)
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 3600 --cleanup
+    profiles:
+      - monitoring
+
+volumes:
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  mysql_data:
+    driver: local
+
+networks:
+  arenasurf_network:
+    driver: bridge

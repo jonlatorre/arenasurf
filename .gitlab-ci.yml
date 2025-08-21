@@ -1,0 +1,255 @@
+# GitLab CI/CD Pipeline para Arena Surf
+# Este pipeline incluye testing, building, y deployment automático
+
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  # Variables de Docker
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  
+  # Variables de la aplicación
+  DJANGO_SETTINGS_MODULE: "arenasurf.settings"
+  DATABASE_URL: "mysql://root:testpassword@mysql:3306/test_arenasurf"
+  
+  # Variables para deployment
+  REGISTRY_IMAGE: $CI_REGISTRY_IMAGE
+  LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  RELEASE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+# Servicios para testing
+services:
+  - name: mysql:8.0
+    alias: mysql
+    variables:
+      MYSQL_ROOT_PASSWORD: testpassword
+      MYSQL_DATABASE: test_arenasurf
+      MYSQL_USER: arenasurf
+      MYSQL_PASSWORD: arenasurf123
+
+# =====================================
+# STAGE: TEST
+# =====================================
+
+test:lint:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install flake8 black isort
+  script:
+    - flake8 --max-line-length=100 --exclude=migrations,venv,env .
+    - black --check --diff .
+    - isort --check-only --diff .
+  allow_failure: true
+  only:
+    - merge_requests
+    - main
+    - develop
+
+test:security:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install safety bandit
+  script:
+    - safety check --json || true
+    - bandit -r . -x */tests/*,*/migrations/*,*/venv/* || true
+  allow_failure: true
+  only:
+    - merge_requests
+    - main
+    - develop
+
+test:django:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    # Instalar dependencias del sistema
+    - apt-get update -qq && apt-get install -y -qq 
+        default-libmysqlclient-dev 
+        build-essential 
+        pkg-config
+    
+    # Crear entorno virtual e instalar dependencias
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install mysqlclient pytest-django pytest-cov
+    
+    # Esperar a que MySQL esté listo
+    - apt-get install -y -qq default-mysql-client
+    - until mysql -h mysql -u root -ptestpassword -e "SELECT 1"; do sleep 1; done
+  script:
+    - source venv/bin/activate
+    - python manage.py migrate --settings=arenasurf.settings
+    - python manage.py collectstatic --noinput --settings=arenasurf.settings
+    - python manage.py test --settings=arenasurf.settings
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# =====================================
+# STAGE: BUILD
+# =====================================
+
+build:docker:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    # Build de la imagen
+    - docker build -t $RELEASE_TAG .
+    - docker tag $RELEASE_TAG $LATEST_TAG
+    
+    # Push al registry
+    - docker push $RELEASE_TAG
+    - docker push $LATEST_TAG
+    
+    # Cleanup
+    - docker rmi $RELEASE_TAG $LATEST_TAG
+  only:
+    - main
+    - develop
+    - tags
+
+# =====================================
+# STAGE: DEPLOY
+# =====================================
+
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $STAGING_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    # Deployment en servidor de staging
+    - |
+      ssh $STAGING_USER@$STAGING_SERVER "
+        cd /opt/arenasurf-staging &&
+        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY &&
+        docker-compose pull &&
+        docker-compose up -d &&
+        docker image prune -f
+      "
+    
+    # Health check
+    - sleep 30
+    - curl -f http://$STAGING_SERVER:8000/admin/ || exit 1
+  environment:
+    name: staging
+    url: http://$STAGING_SERVER:8000
+  only:
+    - develop
+  when: manual
+
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $PRODUCTION_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    # Backup de la base de datos antes del deployment
+    - |
+      ssh $PRODUCTION_USER@$PRODUCTION_SERVER "
+        cd /opt/arenasurf &&
+        docker-compose exec -T db mysqldump -u root -p\$MYSQL_ROOT_PASSWORD arenasurf > backup_\$(date +%Y%m%d_%H%M%S).sql
+      "
+    
+    # Deployment en producción
+    - |
+      ssh $PRODUCTION_USER@$PRODUCTION_SERVER "
+        cd /opt/arenasurf &&
+        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY &&
+        docker-compose pull &&
+        docker-compose up -d &&
+        docker-compose exec -T web python manage.py migrate &&
+        docker-compose exec -T web python manage.py collectstatic --noinput &&
+        docker image prune -f
+      "
+    
+    # Health check
+    - sleep 60
+    - curl -f https://$PRODUCTION_DOMAIN/admin/ || exit 1
+    
+    # Notification (opcional)
+    - |
+      curl -X POST -H 'Content-type: application/json' \
+        --data "{\"text\":\"🚀 Arena Surf desplegado en producción - Commit: $CI_COMMIT_SHORT_SHA\"}" \
+        $SLACK_WEBHOOK || true
+  environment:
+    name: production
+    url: https://$PRODUCTION_DOMAIN
+  only:
+    - main
+    - tags
+  when: manual
+
+# =====================================
+# JOBS ADICIONALES
+# =====================================
+
+# Rollback en caso de problemas
+rollback:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $PRODUCTION_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - |
+      ssh $PRODUCTION_USER@$PRODUCTION_SERVER "
+        cd /opt/arenasurf &&
+        docker-compose down &&
+        docker tag $CI_REGISTRY_IMAGE:previous $CI_REGISTRY_IMAGE:latest &&
+        docker-compose up -d
+      "
+  environment:
+    name: production
+    url: https://$PRODUCTION_DOMAIN
+  when: manual
+  only:
+    - main
+
+# Limpieza periódica
+cleanup:registry:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - |
+      # Script para limpiar imágenes antiguas del registry
+      echo "Limpieza de registry programada..."
+      # Aquí puedes agregar lógica para limpiar imágenes antiguas
+  only:
+    - schedules
+  when: manual
