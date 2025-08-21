@@ -20,6 +20,14 @@
                     </h3>
                 </div>
                 <div class="card-body">
+                    {% if cliente_preseleccionado %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Cliente pre-seleccionado:</strong> {{ cliente_preseleccionado.nombre_completo }}
+                            <br><small>Este bono se creará para este cliente.</small>
+                        </div>
+                    {% endif %}
+                    
                     <form method="post">
                         {% csrf_token %}
                         
@@ -108,17 +116,33 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Si no hay clientes, mostrar alerta
     const clienteSelect = document.getElementById('id_cliente');
+    
+    // Si no hay clientes, mostrar alerta
     if (clienteSelect && clienteSelect.options.length <= 1) {
         const alert = document.createElement('div');
         alert.className = 'alert alert-warning mt-3';
         alert.innerHTML = `
             <strong>¡Atención!</strong> No hay clientes registrados. 
-            <a href="{% url 'bonos:cliente_crear' %}" class="alert-link">Crear cliente</a> primero.
+            <a href="{% url 'clientes:crear' %}" class="alert-link">Crear cliente</a> primero.
         `;
         clienteSelect.parentNode.appendChild(alert);
     }
+    
+    // Si hay un cliente pre-seleccionado, resaltarlo
+    {% if cliente_preseleccionado %}
+        if (clienteSelect) {
+            // Buscar y seleccionar la opción del cliente pre-seleccionado
+            for (let i = 0; i < clienteSelect.options.length; i++) {
+                if (clienteSelect.options[i].value == '{{ cliente_preseleccionado.id }}') {
+                    clienteSelect.selectedIndex = i;
+                    clienteSelect.style.borderColor = '#0d6efd';
+                    clienteSelect.style.boxShadow = '0 0 0 0.2rem rgba(13, 110, 253, 0.25)';
+                    break;
+                }
+            }
+        }
+    {% endif %}
 });
 </script>
 {% endblock %}

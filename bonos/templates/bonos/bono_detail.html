@@ -16,7 +16,7 @@
                         <div class="col-md-6">
                             <h5>Información del Cliente</h5>
                             <p><strong>Nombre:</strong> 
-                                <a href="{% url 'bonos:cliente_detalle' bono.cliente.pk %}">
+                                <a href="{% url 'clientes:detalle' bono.cliente.pk %}">
                                     {{ bono.cliente.nombre_completo }}
                                 </a>
                             </p>

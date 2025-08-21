@@ -37,6 +37,30 @@ class BonoCreateView(StaffRequiredMixin, CreateView):
     template_name = 'bonos/bono_form.html'
     success_url = reverse_lazy('bonos:lista')
     
+    def get_initial(self):
+        initial = super().get_initial()
+        # Si hay un cliente especificado en la URL, pre-seleccionarlo
+        cliente_id = self.request.GET.get('cliente')
+        if cliente_id:
+            try:
+                cliente = Cliente.objects.get(pk=cliente_id, activo=True)
+                initial['cliente'] = cliente
+            except Cliente.DoesNotExist:
+                messages.warning(self.request, 'El cliente especificado no existe o no está activo.')
+        return initial
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Agregar información del cliente pre-seleccionado al contexto
+        cliente_id = self.request.GET.get('cliente')
+        if cliente_id:
+            try:
+                cliente = Cliente.objects.get(pk=cliente_id, activo=True)
+                context['cliente_preseleccionado'] = cliente
+            except Cliente.DoesNotExist:
+                pass
+        return context
+    
     def form_valid(self, form):
         messages.success(self.request, 'Bono creado exitosamente.')
         return super().form_valid(form)

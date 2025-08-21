@@ -38,7 +38,7 @@
                                     {% for bono in bonos %}
                                     <tr>
                                         <td>
-                                            <a href="{% url 'bonos:cliente_detalle' bono.cliente.pk %}">
+                                            <a href="{% url 'clientes:detalle' bono.cliente.pk %}">
                                                 {{ bono.cliente.nombre_completo }}
                                             </a>
                                         </td>
