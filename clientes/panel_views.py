@@ -31,20 +31,45 @@ class ClienteRegistrationForm(UserCreationForm):
         model = User
         fields = ("username", "email", "password1", "password2")
 
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        # Verificar si ya existe un cliente con este email
+        if Cliente.objects.filter(email=email).exists():
+            raise forms.ValidationError("Ya existe un cliente registrado con este email.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        # Verificar si el usuario ya existe
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Este nombre de usuario ya está en uso.")
+        return username
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
         if commit:
             user.save()
-            # Crear el cliente asociado
-            Cliente.objects.create(
-                usuario=user,
-                nombre=self.cleaned_data["nombre"],
-                apellidos=self.cleaned_data["apellidos"],
-                email=self.cleaned_data["email"],
-                telefono=self.cleaned_data["telefono"],
-                fecha_nacimiento=self.cleaned_data["fecha_nacimiento"]
-            )
+            # Verificar si el usuario ya tiene un cliente asociado
+            if hasattr(user, 'cliente'):
+                # Si ya tiene cliente, actualizar los datos
+                cliente = user.cliente
+                cliente.nombre = self.cleaned_data["nombre"]
+                cliente.apellidos = self.cleaned_data["apellidos"]
+                cliente.email = self.cleaned_data["email"]
+                cliente.telefono = self.cleaned_data["telefono"]
+                cliente.fecha_nacimiento = self.cleaned_data["fecha_nacimiento"]
+                cliente.save()
+            else:
+                # Crear nuevo cliente
+                Cliente.objects.create(
+                    usuario=user,
+                    nombre=self.cleaned_data["nombre"],
+                    apellidos=self.cleaned_data["apellidos"],
+                    email=self.cleaned_data["email"],
+                    telefono=self.cleaned_data["telefono"],
+                    fecha_nacimiento=self.cleaned_data["fecha_nacimiento"]
+                )
         return user
 
 
@@ -55,12 +80,28 @@ class ClienteRegistrationView(CreateView):
     success_url = reverse_lazy('clientes:panel')
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        # Autenticar automáticamente al usuario después del registro
-        user = form.save()
-        login(self.request, user)
-        messages.success(self.request, '¡Registro exitoso! Bienvenido a Arena Surf.')
-        return response
+        try:
+            response = super().form_valid(form)
+            # Autenticar automáticamente al usuario después del registro
+            user = form.save()
+            login(self.request, user)
+            messages.success(self.request, '¡Registro exitoso! Bienvenido a Arena Surf.')
+            return response
+        except Exception as e:
+            # Si hay un error, mostrar mensaje y volver al formulario
+            messages.error(self.request, f'Error en el registro: {str(e)}')
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        # Agregar mensajes de error específicos
+        for field, errors in form.errors.items():
+            for error in errors:
+                if field == '__all__':
+                    messages.error(self.request, error)
+                else:
+                    field_name = form.fields[field].label or field
+                    messages.error(self.request, f'{field_name}: {error}')
+        return super().form_invalid(form)
 
 
 class ClientePanelView(LoginRequiredMixin, TemplateView):
