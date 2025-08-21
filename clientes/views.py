@@ -4,9 +4,10 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from .models import Cliente
 from .forms import ClienteForm
+from arenasurf.mixins import StaffRequiredMixin
 
 
-class ClienteListView(ListView):
+class ClienteListView(StaffRequiredMixin, ListView):
     model = Cliente
     template_name = 'clientes/cliente_list.html'
     context_object_name = 'clientes'
@@ -16,7 +17,7 @@ class ClienteListView(ListView):
         return Cliente.objects.filter(activo=True).order_by('apellidos', 'nombre')
 
 
-class ClienteDetailView(DetailView):
+class ClienteDetailView(StaffRequiredMixin, DetailView):
     model = Cliente
     template_name = 'clientes/cliente_detail.html'
     context_object_name = 'cliente'
@@ -27,7 +28,7 @@ class ClienteDetailView(DetailView):
         return context
 
 
-class ClienteCreateView(CreateView):
+class ClienteCreateView(StaffRequiredMixin, CreateView):
     model = Cliente
     form_class = ClienteForm
     template_name = 'clientes/cliente_form.html'
@@ -38,7 +39,7 @@ class ClienteCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ClienteUpdateView(UpdateView):
+class ClienteUpdateView(StaffRequiredMixin, UpdateView):
     model = Cliente
     form_class = ClienteForm
     template_name = 'clientes/cliente_form.html'
@@ -49,7 +50,7 @@ class ClienteUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class ClienteDeleteView(DeleteView):
+class ClienteDeleteView(StaffRequiredMixin, DeleteView):
     model = Cliente
     template_name = 'clientes/cliente_confirm_delete.html'
     success_url = reverse_lazy('clientes:lista')

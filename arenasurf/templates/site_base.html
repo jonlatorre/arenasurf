@@ -29,26 +29,30 @@
                 {% block nav %}
                     <ul class="navbar-nav mr-auto">
                         {% block nav_items %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'bonos:dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i> Bonos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'clientes:lista' %}">
-                                <i class="fas fa-users"></i> Clientes
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'socios:dashboard' %}">
-                                <i class="fas fa-user"></i> Socios
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/">
-                                <i class="fas fa-cogs"></i> Admin
-                            </a>
-                        </li>
+                        {% if user.is_authenticated and user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'bonos:dashboard' %}">
+                                    <i class="fas fa-tachometer-alt"></i> Bonos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'clientes:lista' %}">
+                                    <i class="fas fa-users"></i> Clientes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'socios:dashboard' %}">
+                                    <i class="fas fa-user"></i> Socios
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_authenticated and user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/">
+                                    <i class="fas fa-cogs"></i> Admin
+                                </a>
+                            </li>
+                        {% endif %}
                         {% endblock %}
                     </ul>
                 {% endblock %}

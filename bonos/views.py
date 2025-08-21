@@ -5,10 +5,11 @@ from django.urls import reverse_lazy
 from .models import Bono, UsoBono
 from clientes.models import Cliente
 from .forms import BonoForm, UsoBonoForm
+from arenasurf.mixins import StaffRequiredMixin, staff_required
 
 
 # Vistas de Bonos
-class BonoListView(ListView):
+class BonoListView(StaffRequiredMixin, ListView):
     model = Bono
     template_name = 'bonos/bono_list.html'
     context_object_name = 'bonos'
@@ -18,7 +19,7 @@ class BonoListView(ListView):
         return Bono.objects.select_related('cliente').order_by('-fecha_compra')
 
 
-class BonoDetailView(DetailView):
+class BonoDetailView(StaffRequiredMixin, DetailView):
     model = Bono
     template_name = 'bonos/bono_detail.html'
     context_object_name = 'bono'
@@ -30,7 +31,7 @@ class BonoDetailView(DetailView):
         return context
 
 
-class BonoCreateView(CreateView):
+class BonoCreateView(StaffRequiredMixin, CreateView):
     model = Bono
     form_class = BonoForm
     template_name = 'bonos/bono_form.html'
@@ -41,7 +42,7 @@ class BonoCreateView(CreateView):
         return super().form_valid(form)
 
 
-class BonoUpdateView(UpdateView):
+class BonoUpdateView(StaffRequiredMixin, UpdateView):
     model = Bono
     form_class = BonoForm
     template_name = 'bonos/bono_form.html'
@@ -52,7 +53,7 @@ class BonoUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class BonoDeleteView(DeleteView):
+class BonoDeleteView(StaffRequiredMixin, DeleteView):
     model = Bono
     template_name = 'bonos/bono_confirm_delete.html'
     success_url = reverse_lazy('bonos:lista')
@@ -63,6 +64,7 @@ class BonoDeleteView(DeleteView):
 
 
 # Función para usar un bono (uso rápido sin formulario)
+@staff_required
 def usar_bono(request, pk):
     bono = get_object_or_404(Bono, pk=pk)
     
@@ -83,6 +85,7 @@ def usar_bono(request, pk):
 
 
 # Vista para agregar uso de bono con formulario completo
+@staff_required
 def agregar_uso_bono(request, pk):
     bono = get_object_or_404(Bono, pk=pk)
     
@@ -113,6 +116,7 @@ def agregar_uso_bono(request, pk):
 
 
 # Vista del dashboard
+@staff_required
 def dashboard(request):
     bonos_activos = Bono.objects.filter(activo=True).count()
     bonos_agotados = Bono.objects.filter(activo=False).count()

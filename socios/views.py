@@ -7,9 +7,10 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Socio
 from .forms import SocioForm
+from arenasurf.mixins import StaffRequiredMixin, staff_required
 
 
-class SocioListView(ListView):
+class SocioListView(StaffRequiredMixin, ListView):
     model = Socio
     template_name = 'socios/socio_list.html'
     context_object_name = 'socios'
@@ -55,7 +56,7 @@ class SocioListView(ListView):
         return context
 
 
-class SocioDetailView(DetailView):
+class SocioDetailView(StaffRequiredMixin, DetailView):
     model = Socio
     template_name = 'socios/socio_detail.html'
     context_object_name = 'socio'
@@ -66,7 +67,7 @@ class SocioDetailView(DetailView):
         return context
 
 
-class SocioCreateView(CreateView):
+class SocioCreateView(StaffRequiredMixin, CreateView):
     model = Socio
     form_class = SocioForm
     template_name = 'socios/socio_form.html'
@@ -78,7 +79,7 @@ class SocioCreateView(CreateView):
         return super().form_valid(form)
 
 
-class SocioUpdateView(UpdateView):
+class SocioUpdateView(StaffRequiredMixin, UpdateView):
     model = Socio
     form_class = SocioForm
     template_name = 'socios/socio_form.html'
@@ -89,7 +90,7 @@ class SocioUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class SocioDeleteView(DeleteView):
+class SocioDeleteView(StaffRequiredMixin, DeleteView):
     model = Socio
     template_name = 'socios/socio_confirm_delete.html'
     success_url = reverse_lazy('socios:lista')
@@ -103,6 +104,7 @@ class SocioDeleteView(DeleteView):
         return redirect(self.success_url)
 
 
+@staff_required
 def dashboard_socios(request):
     """Vista del dashboard de socios"""
     today = timezone.now().date()
@@ -144,6 +146,7 @@ def dashboard_socios(request):
     return render(request, 'socios/dashboard.html', context)
 
 
+@staff_required
 def renovar_socio(request, pk):
     """Vista para renovar la membresía de un socio"""
     socio = get_object_or_404(Socio, pk=pk)
