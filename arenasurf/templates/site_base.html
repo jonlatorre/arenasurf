@@ -45,8 +45,20 @@
                                     <i class="fas fa-user"></i> Socios
                                 </a>
                             </li>
+                        {% elif user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'clientes:panel' %}">
+                                    <i class="fas fa-tachometer-alt"></i> Mi Panel
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'clientes:registro' %}">
+                                    <i class="fas fa-user-plus"></i> Registro
+                                </a>
+                            </li>
                         {% endif %}
-                        {% if user.is_authenticated and user.is_staff %}
+                        {% if user.is_authenticated and user.is_superuser %}
                             <li class="nav-item">
                                 <a class="nav-link" href="/admin/">
                                     <i class="fas fa-cogs"></i> Admin

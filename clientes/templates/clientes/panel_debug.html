@@ -1,0 +1,42 @@
+{% extends "site_base.html" %}
+
+{% block title %}Panel de Cliente - TEST{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Panel de Cliente - MODO DEBUG</h1>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Información de Debug</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Usuario autenticado:</strong> {{ user.is_authenticated }}</p>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            
+            {% if user.cliente %}
+                <div class="alert alert-success">
+                    <h4>✅ Cliente encontrado</h4>
+                    <p><strong>ID:</strong> {{ user.cliente.id }}</p>
+                    <p><strong>Nombre:</strong> {{ user.cliente.nombre_completo }}</p>
+                    <p><strong>Email:</strong> {{ user.cliente.email }}</p>
+                </div>
+            {% else %}
+                <div class="alert alert-danger">
+                    <h4>❌ No se encontró cliente asociado</h4>
+                </div>
+            {% endif %}
+            
+            <hr>
+            <h4>Variables de contexto:</h4>
+            <ul>
+                <li>cliente: {{ cliente|default:"None" }}</li>
+                <li>error: {{ error|default:"None" }}</li>
+                <li>es_socio: {{ es_socio|default:"None" }}</li>
+                <li>bonos_activos: {{ bonos_activos.count|default:"None" }}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

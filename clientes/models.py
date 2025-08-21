@@ -1,9 +1,20 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.auth.models import User
 
 
 class Cliente(models.Model):
     """Modelo para representar un cliente del surf center"""
+    
+    # Relación con usuario (opcional)
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cliente',
+        verbose_name="Usuario asociado"
+    )
     
     nombre = models.CharField(max_length=100, verbose_name="Nombre")
     apellidos = models.CharField(max_length=100, verbose_name="Apellidos")

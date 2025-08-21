@@ -1,0 +1,314 @@
+{% extends "site_base.html" %}
+{% load static %}
+
+{% block title %}Panel de Cliente - Arena Surf{% endblock %}
+
+{% block extra_head %}
+<style>
+    .panel-container {
+        margin-top: 2rem;
+    }
+    .welcome-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #007bff;
+    }
+    .info-card h4 {
+        color: #007bff;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    .info-card h4 i {
+        margin-right: 0.5rem;
+    }
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+    .stat-label {
+        font-weight: 500;
+        color: #333;
+    }
+    .stat-value {
+        color: #007bff;
+        font-weight: bold;
+    }
+    .bono-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #28a745;
+    }
+    .bono-item.agotado {
+        border-left-color: #dc3545;
+        opacity: 0.7;
+    }
+    .bono-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .bono-tipo {
+        font-weight: bold;
+        color: #333;
+    }
+    .bono-estado {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.8rem;
+    }
+    .bono-estado.activo {
+        background-color: #28a745;
+    }
+    .bono-estado.agotado {
+        background-color: #dc3545;
+    }
+    .progress-bar-container {
+        background: #e9ecef;
+        border-radius: 4px;
+        height: 8px;
+        margin: 0.5rem 0;
+    }
+    .progress-bar {
+        background: #28a745;
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    .socio-vigente {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .socio-vencido {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    .no-data {
+        text-align: center;
+        color: #666;
+        padding: 2rem;
+        font-style: italic;
+    }
+    .alert-info-custom {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="panel-container">
+    {% if error %}
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle"></i> Problema con el perfil</h4>
+            {% if error == 'no_cliente' %}
+                <p>Tu usuario no está vinculado a un perfil de cliente. Por favor, contacta con el administrador para resolver este problema.</p>
+                <p><strong>Usuario actual:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+            {% elif error == 'error_general' %}
+                <p>Ha ocurrido un error al cargar tu perfil. Por favor, inténtalo de nuevo o contacta con el soporte.</p>
+            {% endif %}
+        </div>
+    {% elif cliente %}
+        <!-- Header de bienvenida -->
+        <div class="welcome-header">
+            <h1><i class="fas fa-water"></i> ¡Bienvenido, {{ cliente.nombre }}!</h1>
+            <p>Gestiona tu cuenta y servicios de Arena Surf</p>
+        </div>
+
+        <div class="row">
+            <!-- Información personal -->
+            <div class="col-md-6">
+                <div class="info-card">
+                    <h4><i class="fas fa-user"></i> Información Personal</h4>
+                    <div class="stat-item">
+                        <span class="stat-label">Nombre completo:</span>
+                        <span class="stat-value">{{ cliente.nombre_completo }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Email:</span>
+                        <span class="stat-value">{{ cliente.email }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Teléfono:</span>
+                        <span class="stat-value">{{ cliente.telefono|default:"No especificado" }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Cliente desde:</span>
+                        <span class="stat-value">{{ cliente.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de socio -->
+            <div class="col-md-6">
+                {% if es_socio %}
+                    <div class="info-card">
+                        <h4><i class="fas fa-star"></i> Información de Socio</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Número de socio:</span>
+                            <span class="stat-value">{{ socio.numero_socio }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Nivel:</span>
+                            <span class="stat-value">{{ socio.get_nivel_display }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Estado:</span>
+                            {% if socio.esta_vigente %}
+                                <span class="stat-value socio-vigente">
+                                    <i class="fas fa-check-circle"></i> Vigente
+                                </span>
+                            {% else %}
+                                <span class="stat-value socio-vencido">
+                                    <i class="fas fa-times-circle"></i> Vencido
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Vencimiento:</span>
+                            <span class="stat-value">{{ socio.fecha_vencimiento|date:"d/m/Y" }}</span>
+                        </div>
+                        {% if socio.esta_vigente %}
+                            <div class="stat-item">
+                                <span class="stat-label">Días restantes:</span>
+                                <span class="stat-value">{{ socio.dias_hasta_vencimiento }} días</span>
+                            </div>
+                        {% endif %}
+                        {% if socio.numero_taquilla %}
+                            <div class="stat-item">
+                                <span class="stat-label">Taquilla:</span>
+                                <span class="stat-value">Nº {{ socio.numero_taquilla }}</span>
+                            </div>
+                        {% endif %}
+                        {% if socio.numero_guardatablas %}
+                            <div class="stat-item">
+                                <span class="stat-label">Guardatablas:</span>
+                                <span class="stat-value">Nº {{ socio.numero_guardatablas }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="info-card">
+                        <h4><i class="fas fa-star"></i> Membresía</h4>
+                        <div class="alert-info-custom">
+                            <p><strong>¡Hazte socio de Arena Surf!</strong></p>
+                            <p>Disfruta de beneficios exclusivos como taquilla, guardatablas y descuentos especiales.</p>
+                            <p>Contacta con nosotros para más información.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Resumen de bonos -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="info-card text-center">
+                    <h4><i class="fas fa-ticket-alt"></i> Bonos Activos</h4>
+                    <h2 class="text-success">{{ bonos_activos.count }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-card text-center">
+                    <h4><i class="fas fa-check"></i> Bonos Completados</h4>
+                    <h2 class="text-info">{{ bonos_agotados.count }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-card text-center">
+                    <h4><i class="fas fa-chart-bar"></i> Total Bonos</h4>
+                    <h2 class="text-primary">{{ total_bonos }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de bonos activos -->
+        {% if bonos_activos %}
+            <div class="info-card">
+                <h4><i class="fas fa-ticket-alt"></i> Mis Bonos Activos</h4>
+                {% for bono in bonos_activos %}
+                    <div class="bono-item">
+                        <div class="bono-header">
+                            <span class="bono-tipo">{{ bono.tipo_bono }} usos</span>
+                            <span class="bono-estado activo">ACTIVO</span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">Progreso: {{ bono.usos_utilizados }}/{{ bono.usos_totales }} usos</small>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: {% widthratio bono.usos_utilizados bono.usos_totales 100 %}%"></div>
+                                </div>
+                                <small class="text-muted">{{ bono.usos_restantes }} usos restantes</small>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <small class="text-muted">Precio: €{{ bono.precio|default:"No especificado" }}</small><br>
+                                <small class="text-muted">Comprado: {{ bono.fecha_compra|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Últimos usos -->
+        {% if ultimos_usos %}
+            <div class="info-card">
+                <h4><i class="fas fa-history"></i> Últimas Sesiones</h4>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Bono</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for uso in ultimos_usos %}
+                                <tr>
+                                    <td>{{ uso.fecha_uso|date:"d/m/Y" }}</td>
+                                    <td>{{ uso.bono.tipo_bono }} usos</td>
+                                    <td>{{ uso.descripcion|default:"-" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle"></i> Perfil no encontrado</h4>
+            <p>No se ha encontrado tu perfil de cliente. Por favor, contacta con el administrador.</p>
+            <p><strong>Usuario:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
